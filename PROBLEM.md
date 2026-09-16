@@ -21,11 +21,28 @@ enough to release, or whether it is safer to rerun first. The prediction is an e
 reality; the decision is the action a human takes under a deadline.
 
 ## 4. The cost
-The two ways a wrong answer costs money are not equal:
+One row per (true cause, system output) pair that leads to a wrong action:
 
-- **A real defect ships** (system leaned "flaky", it wasn't): ships to users, costs the
-  company credibility and goodwill. Rough cost: **$5000**.
-- **A flaky test is treated as a real defect** (false alarm): release is delayed/stopped
-  for nothing, costs engineer time and a slipped deadline. Rough cost: **$500**.
+| True cause | System says | Cost | Why |
+|---|---|---|---|
+| real defect | flaky | $5000 | ships to users |
+| real defect | infra | $4000 | rerun may let an intermittent defect slip through |
+| real defect | abstain | $200 | manual investigation, resolved before shipping |
+| flaky | real defect | $500 | release delayed for nothing |
+| flaky | infra | $400 | rerun resolves nothing but causes no harm |
+| flaky | abstain | $200 | manual investigation of a flaky test |
+| infra | real defect | $500 | release delayed for a machine hiccup |
+| infra | flaky | $300 | ships fine now, but the infra fault stays unflagged and can recur |
+| infra | abstain | $200 | manual investigation of a machine hiccup |
 
-Roughly a 10:1 asymmetry — shipping a real defect is far more expensive than a false alarm.
+**Not symmetric.** Anything that risks a real defect shipping ($5000, $4000) costs 10-25x
+more than a false alarm ($500) or a mix-up between the two benign causes ($300-400).
+Roughly a 10:1 asymmetry between the worst case and the routine false alarm.
+
+**ABSTAIN is cheap, not free.** Flat $200 regardless of the true cause — the cost of the
+engineer's manual investigation. It exists because it is cheaper than a wrong guess in any
+row above it, not because it costs nothing.
+
+## 5. The objective
+Minimize the expected cost from the table above (cost-weighted risk), not accuracy —
+because accuracy weighs every mistake the same, and this table shows they aren't.
