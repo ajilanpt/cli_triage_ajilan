@@ -1,0 +1,36 @@
+{
+  "source": "FlakeFlagger (Zenodo record 4450723), CC-BY-4.0",
+  "join_key": "testClassName + \"#\" + testMethodName  ==  test_results.Test",
+  "label_column": "IsFlaky (test_results.csv)",
+  "features_rows": 26619,
+  "results_rows": 26765,
+  "joined_rows": 26134,
+  "features_only_unmatched": 485,
+  "results_only_unmatched": 631,
+  "projects": 25,
+  "positives": 825,
+  "positive_rate": 0.03156807224305502,
+  "feature_count": 15,
+  "excluded_leak_columns": [
+    "flaky",
+    "flaky_source",
+    "IsFlaky"
+  ],
+  "excluded_label_derived_columns": [
+    "NumFailingRuns",
+    "NumPassingRuns",
+    "FirstFailingRunID",
+    "FirstPassingRunID",
+    "UniqueFailingExceptionTypes"
+  ],
+  "excluded_history_columns": [
+    "hIndexModificationsPerCoveredLine_window5",
+    "hIndexModificationsPerCoveredLine_window10",
+    "hIndexModificationsPerCoveredLine_window25",
+    "hIndexModificationsPerCoveredLine_window50",
+    "hIndexModificationsPerCoveredLine_window75",
+    "hIndexModificationsPerCoveredLine_window100",
+    "hIndexModificationsPerCoveredLine_window500",
+    "hIndexModificationsPerCoveredLine_window10000"
+  ]
+}
