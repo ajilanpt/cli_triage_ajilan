@@ -7,4 +7,4 @@ you gave up, the interview for that phase is not finished.
 
 | Phase | Decision | What it cost |
 |---|---|---|
-| | | |
+| 00 | system may auto-rerun the failing test on low confidence, but never release/stop | gives up a fully "hands-off" system in exchange for keeping release/stop strictly human — accepted because rerun is reversible and has no effect outside the CI run |
