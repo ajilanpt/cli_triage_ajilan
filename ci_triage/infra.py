@@ -9,7 +9,7 @@ import re
 import tarfile
 from collections import Counter
 
-MASS_FAILURE_THRESHOLD = 0.30
+MASS_FAILURE_THRESHOLD = 0.10
 DETERMINISTIC_THRESHOLD = 0.80
 
 # each test class prints its own "Tests run: N ... Time elapsed: Xs" line, then
@@ -22,18 +22,42 @@ RESULTS_BLOCK_RE = re.compile(
     r"\s*Errors:\s*(?P<errors>\d+),\s*Skipped:\s*(?P<skipped>\d+)",
     re.DOTALL,
 )
-FAILED_TEST_IN_BLOCK_RE = re.compile(r"(\w+)\(([\w.$]+)\):")
+# two surefire report formats seen across projects: the legacy
+# "methodName(ClassName): message" form, and the modern
+# "ClassName.methodName:line message" form, where an inherited test method
+# is prefixed "RunClass>DeclaringClass.methodName:line" -- the run class
+# (before ">") is the one that actually executed, so it is the identity used.
+FAILED_TEST_RE_LEGACY = re.compile(r"(\w+)\(([\w.$]+)\):")
+# anchored to the start of a line (after only whitespace): a failing entry's
+# own "->helper.method:line" call-chain continuation is never line-initial,
+# and neither is a stack-trace frame like "at pkg.Class.method(File.java:123)".
+FAILED_TEST_RE_MODERN = re.compile(
+    r"^[ \t]*(?:(?P<outer>[\w.$]+)>)?(?P<inner>[\w.$]+)\.(?P<method>\w+):\d+",
+    re.MULTILINE,
+)
 
 
 def _results_blocks(log_text):
     return [m.groupdict() for m in RESULTS_BLOCK_RE.finditer(log_text)]
 
 
+def _failing_test_names_in_block(body):
+    """List (not deduped) of "Class#method" found in one block's body --
+    length must equal that block's own Failures + Errors count, or the
+    parse cannot be trusted (see parse_run_log)."""
+    names = []
+    for method, cls in FAILED_TEST_RE_LEGACY.findall(body):
+        names.append(f"{cls}#{method}")
+    for m in FAILED_TEST_RE_MODERN.finditer(body):
+        cls = m.group("outer") or m.group("inner")
+        names.append(f"{cls}#{m.group('method')}")
+    return names
+
+
 def _failing_tests_in_blocks(blocks):
     failing_tests = set()
     for block in blocks:
-        for method, cls in FAILED_TEST_IN_BLOCK_RE.findall(block["body"]):
-            failing_tests.add(f"{cls}#{method}")
+        failing_tests.update(_failing_test_names_in_block(block["body"]))
     return failing_tests
 
 
@@ -74,14 +98,46 @@ def parse_run_log(log_text, deterministic_tests=frozenset()):
             "failing_tests": set(),
         }
 
+    # each block's own Failures+Errors count is ground truth for that module;
+    # if the parsed failing-test names don't add up to it, the name regex
+    # doesn't understand this log's format and nothing it produced can be
+    # trusted -- report UNKNOWN rather than a verdict built on a bad parse.
+    declared_failed = 0
+    parsed_failed = 0
+    for block in summaries:
+        block_declared = int(block["failures"]) + int(block["errors"])
+        block_parsed = len(_failing_test_names_in_block(block["body"]))
+        declared_failed += block_declared
+        parsed_failed += block_parsed
+        if block_parsed != block_declared:
+            return {
+                "verdict": "UNKNOWN",
+                "reason": (
+                    f"a module reported {block_declared} failing/erroring tests but "
+                    f"{block_parsed} could be parsed by name from its Results block "
+                    "-- the failing-test name format in this log is not recognized"
+                ),
+                "total": 0,
+                "failed": 0,
+                "failing_tests": set(),
+            }
+
     # sum every module's Results block, not just the last one (multi-module build)
     total = sum(int(m["total"]) for m in summaries)
-    failing_tests = _failing_tests_in_blocks(summaries)
-    scored_failing_tests = failing_tests - deterministic_tests
-    # a deterministic test that failed here is removed from the denominator too,
+    # raw, undeduped: the same "Class#method" can occur more than once in one
+    # run (e.g. one broken @Before failing several @Test methods, all logged
+    # under the setUp method's own name) -- the fraction must count each
+    # failed test *execution*, not each distinct name, or it undercounts.
+    raw_names = []
+    for block in summaries:
+        raw_names.extend(_failing_test_names_in_block(block["body"]))
+    # a deterministic test's occurrences are removed from the denominator too,
     # since its outcome is excluded from the fraction entirely, not just the count
-    total_scored = total - len(deterministic_tests & failing_tests)
-    failed = len(scored_failing_tests)
+    deterministic_occurrences = sum(1 for n in raw_names if n in deterministic_tests)
+    total_scored = total - deterministic_occurrences
+    failed = len(raw_names) - deterministic_occurrences
+    # deduped, for "which distinct tests failed" reporting (infra.json), not the fraction
+    distinct_failing_tests = set(raw_names) - deterministic_tests
 
     if total_scored and failed / total_scored >= MASS_FAILURE_THRESHOLD:
         return {
@@ -90,7 +146,7 @@ def parse_run_log(log_text, deterministic_tests=frozenset()):
             f">= {MASS_FAILURE_THRESHOLD:.0%} threshold, after excluding deterministic tests",
             "total": total_scored,
             "failed": failed,
-            "failing_tests": scored_failing_tests,
+            "failing_tests": distinct_failing_tests,
         }
 
     return {
@@ -99,7 +155,7 @@ def parse_run_log(log_text, deterministic_tests=frozenset()):
         f"{MASS_FAILURE_THRESHOLD:.0%} mass-failure threshold",
         "total": total_scored,
         "failed": failed,
-        "failing_tests": scored_failing_tests,
+        "failing_tests": distinct_failing_tests,
     }
 
 

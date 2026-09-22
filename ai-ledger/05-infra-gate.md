@@ -35,3 +35,40 @@ directly would have silently classified genuinely poisoned runs as fine, and vic
 nothing here duplicates a library. Kept as plain functions, no class, per the phase's own
 instruction that this "is a function that reads a run and returns a verdict plus a reason,
 not a framework."
+
+## Session 2 — redo after the handoff note
+
+### Review
+1. correctness — the failing-test name regex was built and validated only against
+   kevinsawicki-http-request's log format and silently matched nothing on square-okhttp's
+   different format, fabricating "0 failed" verdicts for an entire project. Caught by running
+   the parser against a real square-okhttp run and comparing to a by-hand read of the same
+   log. See `decisions/05-infra-gate.md`.
+2. correctness — the widened name regex initially over-matched a `->` call-chain continuation
+   and a stack-trace `(File.java:line)` frame as if they were separate failing tests (104
+   declared vs. 118 parsed on one real block). Fixed by anchoring the modern-format regex to
+   the start of a line.
+3. correctness — `failing_tests` as a `set()` silently deduped repeated occurrences of the
+   same test name within one run (e.g. one broken `@Before` failing 19 different `@Test`
+   methods, all logged as `ConnectionPoolTest#setUp`), undercounting the mass-failure
+   fraction's numerator. Fixed: raw, undeduped occurrence counts feed the fraction; a deduped
+   set is kept separately for the "distinct failing tests" report.
+
+## Proposed
+When the parsed failing-test count for a block doesn't match its own `Failures + Errors`
+total (an unrecognized log format), trust the `Failures + Errors` number for the
+verdict/fraction anyway, and only lose the individual test *names* for that run.
+
+## Rejected / narrowed to
+Rejected by the builder in favor of the stricter option: report the run `UNKNOWN` instead.
+Reason given: a verdict "backed" by a count the code itself couldn't verify is exactly the
+kind of unearned confidence this phase exists to prevent, even though it costs more `UNKNOWN`
+runs. The regex was then widened to actually parse square-okhttp's format, so this doesn't
+send every square-okhttp run to `UNKNOWN` in practice — only a run in a genuinely unrecognized
+future format would.
+
+## Because
+Trusting the `Failures + Errors` number alone while admitting the name parse failed would
+still produce a verdict and a fraction that look complete, with no signal to a future reader
+that the underlying names couldn't be verified — the same "confident but silently wrong"
+failure mode this whole redo was triggered by.

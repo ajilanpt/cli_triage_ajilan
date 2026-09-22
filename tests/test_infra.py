@@ -118,3 +118,95 @@ def test_deterministic_tests_are_excluded_from_the_mass_failure_fraction():
     assert result["verdict"] == "TRUSTED"
     assert result["failed"] == 0
     assert result["total"] == 6  # 10 - the 4 excluded deterministic tests
+
+
+# real format seen in square-okhttp, not kevinsawicki-http-request: no
+# parentheses, "Class.method:line", an inherited method as "Run>Declaring",
+# and a "->" call-chain continuation on the SAME failing-test entry.
+MODERN_FORMAT_LOG = """
+Running com.example.BarTest
+Tests run: 5, Failures: 1, Errors: 2, Skipped: 0, Time elapsed: 1 sec
+
+Results :
+
+Failed tests:
+  BarTest.explode:42 boom
+
+Tests in error:
+  BarTest>BaseTest.chained:100->BaseTest.helper:200 NoSuchMethod
+  at some.pkg.Helper.run(Helper.java:12)
+  BarTest.other:55 NoSuchMethod
+
+Tests run: 5, Failures: 1, Errors: 2, Skipped: 0
+
+[INFO] BUILD SUCCESS
+"""
+
+# the format this codebase's regex has no rule for at all
+UNRECOGNIZED_FORMAT_LOG = """
+Running com.example.BazTest
+Tests run: 3, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 1 sec
+
+Results :
+
+  !! testX and testY blew up, see log above !!
+
+Tests run: 3, Failures: 2, Errors: 0, Skipped: 0
+
+[INFO] BUILD SUCCESS
+"""
+
+# the exact shape that broke the old kevinsawicki-only regex on square-okhttp:
+# one broken @Before failing several @Test methods, all logged under the
+# setUp method's own name -- one distinct name, three failed executions.
+REPEATED_NAME_LOG = """
+Running com.example.PoolTest
+Tests run: 3, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: 1 sec
+
+Results :
+
+Tests in error:
+  PoolTest.setUp:10 boom
+  PoolTest.setUp:10 boom
+  PoolTest.setUp:10 boom
+
+Tests run: 3, Failures: 0, Errors: 3, Skipped: 0
+
+[INFO] BUILD SUCCESS
+"""
+
+
+def test_modern_class_dot_method_format_is_parsed():
+    result = parse_run_log(MODERN_FORMAT_LOG)
+    assert result["verdict"] == "MASS_FAILURE"
+    assert result["failed"] == 3
+    assert result["failing_tests"] == {"BarTest#explode", "BarTest#chained", "BarTest#other"}
+
+
+def test_call_chain_continuation_is_not_double_counted():
+    # BaseTest.helper:200 is where BarTest#chained's failure happened to
+    # occur, not a second failing test -- must not appear in failing_tests
+    result = parse_run_log(MODERN_FORMAT_LOG)
+    assert "BaseTest#helper" not in result["failing_tests"]
+
+
+def test_stack_trace_file_line_is_not_mistaken_for_a_failing_test():
+    # "Helper.java:12" fits the same Class.method:line shape as a real entry
+    result = parse_run_log(MODERN_FORMAT_LOG)
+    assert not any("Helper" in name for name in result["failing_tests"])
+
+
+def test_unrecognized_failing_test_format_is_unknown_not_silently_zero():
+    # the old bug: a name regex that matches nothing still returns a verdict,
+    # with a fabricated "0 failed" reason instead of admitting it can't parse
+    result = parse_run_log(UNRECOGNIZED_FORMAT_LOG)
+    assert result["verdict"] == "UNKNOWN"
+    assert result["failed"] == 0
+    assert "not recognized" in result["reason"]
+
+
+def test_repeated_name_counts_each_failed_execution_in_the_fraction():
+    result = parse_run_log(REPEATED_NAME_LOG)
+    assert result["failed"] == 3  # three failed executions ...
+    assert result["failing_tests"] == {"PoolTest#setUp"}  # ... one distinct name
+    assert result["verdict"] == "MASS_FAILURE"  # 3/3 = 100%, not 1/3
