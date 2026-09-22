@@ -1,0 +1,214 @@
+{
+  "grouped_cross_project": {
+    "n_folds": 5,
+    "before_calibration": {
+      "auc": {
+        "mean": 0.5867315465542096,
+        "std": 0.24479080176565685
+      },
+      "ece_equal_frequency": {
+        "mean": 0.04796485631712989,
+        "std": 0.02759198487604442
+      },
+      "brier": {
+        "mean": 0.04444881130896326,
+        "std": 0.028412808951228264
+      }
+    },
+    "after_calibration": {
+      "auc": {
+        "mean": 0.5194963128046167,
+        "std": 0.24717140058349393
+      },
+      "ece_equal_frequency": {
+        "mean": 0.04345102373005127,
+        "std": 0.014562770561452127
+      },
+      "brier": {
+        "mean": 0.035657600305734144,
+        "std": 0.02331104529967042
+      }
+    }
+  },
+  "per_project_pivot": {
+    "n_splits": 3,
+    "min_positives": 5,
+    "projects_scored": 17,
+    "projects_skipped": {
+      "Achilles": {
+        "rows": 1317,
+        "positives": 4
+      },
+      "assertj-core": {
+        "rows": 6261,
+        "positives": 1
+      },
+      "commons-exec": {
+        "rows": 55,
+        "positives": 0
+      },
+      "elastic-job-lite": {
+        "rows": 558,
+        "positives": 3
+      },
+      "handlebars.java": {
+        "rows": 427,
+        "positives": 1
+      },
+      "jimfs": {
+        "rows": 212,
+        "positives": 0
+      },
+      "ninja": {
+        "rows": 307,
+        "positives": 1
+      },
+      "zxing": {
+        "rows": 345,
+        "positives": 2
+      }
+    },
+    "overall_auc": {
+      "mean": 0.8286144989930857,
+      "std": 0.1539926578733277
+    },
+    "per_project": {
+      "activiti": {
+        "rows": 2044,
+        "positives": 32,
+        "auc": {
+          "mean": 0.6983680365278336,
+          "std": 0.02880491610378072
+        }
+      },
+      "alluxio": {
+        "rows": 187,
+        "positives": 116,
+        "auc": {
+          "mean": 1.0,
+          "std": 0.0
+        }
+      },
+      "ambari": {
+        "rows": 324,
+        "positives": 52,
+        "auc": {
+          "mean": 0.9568951987252641,
+          "std": 0.04578365021678274
+        }
+      },
+      "hbase": {
+        "rows": 431,
+        "positives": 145,
+        "auc": {
+          "mean": 0.9269906847973107,
+          "std": 0.01929810342569185
+        }
+      },
+      "hector": {
+        "rows": 142,
+        "positives": 33,
+        "auc": {
+          "mean": 0.9300323050323049,
+          "std": 0.02515682970289136
+        }
+      },
+      "http-request": {
+        "rows": 163,
+        "positives": 18,
+        "auc": {
+          "mean": 0.886125283446712,
+          "std": 0.05214254389601196
+        }
+      },
+      "httpcore": {
+        "rows": 712,
+        "positives": 22,
+        "auc": {
+          "mean": 0.9357531055900621,
+          "std": 0.03018384515774316
+        }
+      },
+      "incubator-dubbo": {
+        "rows": 2176,
+        "positives": 19,
+        "auc": {
+          "mean": 0.885124842704815,
+          "std": 0.02919530300496527
+        }
+      },
+      "jackrabbit-oak": {
+        "rows": 3898,
+        "positives": 15,
+        "auc": {
+          "mean": 0.6574968521181814,
+          "std": 0.12184347310086344
+        }
+      },
+      "java-websocket": {
+        "rows": 145,
+        "positives": 23,
+        "auc": {
+          "mean": 0.9340810104529617,
+          "std": 0.052634817701084365
+        }
+      },
+      "logback": {
+        "rows": 843,
+        "positives": 22,
+        "auc": {
+          "mean": 0.6187507241339358,
+          "std": 0.07197911792939335
+        }
+      },
+      "okhttp": {
+        "rows": 810,
+        "positives": 100,
+        "auc": {
+          "mean": 0.7592359705395598,
+          "std": 0.04132104794172535
+        }
+      },
+      "orbit": {
+        "rows": 86,
+        "positives": 7,
+        "auc": {
+          "mean": 0.4142924976258309,
+          "std": 0.13426676360684658
+        }
+      },
+      "spring-boot": {
+        "rows": 2127,
+        "positives": 163,
+        "auc": {
+          "mean": 0.9758748946460504,
+          "std": 0.014400056419514883
+        }
+      },
+      "undertow": {
+        "rows": 183,
+        "positives": 7,
+        "auc": {
+          "mean": 0.7249821416975127,
+          "std": 0.21329583154753176
+        }
+      },
+      "wildfly": {
+        "rows": 1236,
+        "positives": 23,
+        "auc": {
+          "mean": 0.9158137358047974,
+          "std": 0.047164319164546324
+        }
+      },
+      "wro4j": {
+        "rows": 1145,
+        "positives": 16,
+        "auc": {
+          "mean": 0.8666291990393238,
+          "std": 0.07900181496191548
+        }
+      }
+    }
+  }
+}

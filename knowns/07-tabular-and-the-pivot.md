@@ -1,0 +1,11 @@
+# Phase 07
+
+| Was | Now | Statement | Evidence |
+|---|---|---|---|
+| unknown | known | on the grouped (zero-shot cross-project) split, calibration improves ECE (equal-frequency: 0.048 -> 0.044) and Brier (0.044 -> 0.036), but *drops* AUC (0.587 -> 0.519) -- calibration is not free | artifacts/results/tabular.json, experiments/07-calibration-tradeoff.md |
+| unknown | known | the AUC drop is a side effect of `CalibratedClassifierCV`'s internal cv=3 retraining the base model on only 2/3 of an already-small, unevenly-distributed fold's training rows each time, not evidence that calibration damages ranking in principle | experiments/07-calibration-tradeoff.md |
+| unknown | known | the zero-shot cross-project observer (0.587 AUC, one fold at 0.121) is too weak and unstable to safely inform a real-defect-vs-flaky decision under `PROBLEM.md`'s cost table ($5000 for a real defect misreported as flaky) | decisions/07-the-pivot.md |
+| unknown | known | pivoting to a per-project model (trained and evaluated within one project's own rows, ordinary stratified k-fold) raises overall AUC to 0.829 (mean of 17 scored projects' means, std 0.154) -- a substantial, real improvement from changing the question, not from tuning the same model harder | artifacts/results/tabular.json |
+| unknown | known | 8 of 25 projects have too few positives (<5) to fit or evaluate a per-project model at all (`commons-exec`, `jimfs`: 0 positives; `assertj-core`, `handlebars.java`, `ninja`: 1 positive; `elastic-job-lite`: 3; `zxing`: 2; `Achilles`: 4) -- the pivot does not help these projects and they are named, not silently dropped | artifacts/results/tabular.json |
+| unknown | known-unknown | `orbit` scores 0.414 (below chance) under the per-project pivot despite the 5-positive threshold being met -- whether this is small-sample noise (86 rows, 7 positives, 3-fold CV) or a genuine case the pivot doesn't fix is unresolved |
+| unknown | known-unknown | the per-project pivot assumes a project has *already* accumulated a useful amount of its own history; the cold-start case (a brand-new project with little or no history) still faces the original weak zero-shot number, and no cold-start-specific mitigation has been designed |
