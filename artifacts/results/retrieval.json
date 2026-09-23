@@ -1,0 +1,53 @@
+{
+  "k": 5,
+  "max_docs_per_test": 5,
+  "projects": {
+    "kevinsawicki-http-request": {
+      "n_documents": 75
+    },
+    "tootallnate-java-websocket": {
+      "n_documents": 108
+    },
+    "square-okhttp": {
+      "n_documents": 813
+    }
+  },
+  "within_project": {
+    "kevinsawicki-http-request": {
+      "skipped": "fewer than k documents in one class"
+    },
+    "tootallnate-java-websocket": {
+      "skipped": "fewer than k documents in one class"
+    },
+    "square-okhttp": {
+      "precision_at_k": 0.992619926199262,
+      "n_scored": 813,
+      "k": 5,
+      "mean_distinct_tests_among_neighbors": 4.639606396063961,
+      "majority_baseline": 0.5854858548585485
+    }
+  },
+  "cross_project": {
+    "not_performable_with_this_data": true,
+    "why": "kevinsawicki and tootallnate together have zero not-flaky documents (see decisions/09-index-contents.md), so querying either as the held-out project produces a 100%-flaky query population where precision@k trivially equals the majority baseline (both 1.0) -- not evidence of discrimination. The one direction that would be informative, holding out square-okhttp (the only project with real class balance) and indexing the other two, cannot run at all: those two projects contribute no not-flaky documents to build a two-class training index from.",
+    "kevinsawicki-http-request": {
+      "precision_at_k": 1.0,
+      "n_scored": 75,
+      "k": 5,
+      "mean_distinct_tests_among_neighbors": 1.9333333333333333,
+      "majority_baseline": 1.0,
+      "note": "uninformative: query population is 100% flaky (kevinsawicki has zero not-flaky documents), so this number cannot distinguish real discrimination from guessing the majority class"
+    },
+    "tootallnate-java-websocket": {
+      "precision_at_k": 1.0,
+      "n_scored": 108,
+      "k": 5,
+      "mean_distinct_tests_among_neighbors": 3.2962962962962963,
+      "majority_baseline": 1.0,
+      "note": "uninformative, for the same reason as kevinsawicki-http-request above"
+    },
+    "square-okhttp": {
+      "skipped": "training index (other 2 projects) lacks both classes with >= k documents"
+    }
+  }
+}
