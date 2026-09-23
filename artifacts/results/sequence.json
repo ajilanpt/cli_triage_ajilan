@@ -1,0 +1,51 @@
+{
+  "prefix_lengths": [
+    5,
+    10
+  ],
+  "suffix_length": 20,
+  "examples_per_project": {
+    "kevinsawicki-http-request": 30,
+    "tootallnate-java-websocket": 46,
+    "square-okhttp": 258
+  },
+  "folds": [
+    {
+      "held_out": "kevinsawicki-http-request",
+      "skipped": "no positive examples in test fold -- AUC undefined",
+      "n_test": 30
+    },
+    {
+      "held_out": "tootallnate-java-websocket",
+      "n_train": 288,
+      "n_test": 46,
+      "positive_rate_test": 0.2391304347826087,
+      "model_raw_auc": 0.4662337662337662,
+      "model_calibrated_auc": 0.4662337662337662,
+      "n_distinct_calibrated_probs": 4,
+      "control_auc": 0.5168831168831168,
+      "model_minus_control_bootstrap": {
+        "mean_diff": -0.04389159371694605,
+        "ci_low": -0.3049119574119575,
+        "ci_high": 0.1776948051948051,
+        "n_boot_used": 1000
+      }
+    },
+    {
+      "held_out": "square-okhttp",
+      "n_train": 76,
+      "n_test": 258,
+      "positive_rate_test": 0.08527131782945736,
+      "model_raw_auc": 0.7496147919876733,
+      "model_calibrated_auc": 0.7496147919876733,
+      "n_distinct_calibrated_probs": 7,
+      "control_auc": 0.26810477657935283,
+      "model_minus_control_bootstrap": {
+        "mean_diff": 0.48333474092360756,
+        "ci_low": 0.35456410912611797,
+        "ci_high": 0.5998819033640092,
+        "n_boot_used": 1000
+      }
+    }
+  ]
+}

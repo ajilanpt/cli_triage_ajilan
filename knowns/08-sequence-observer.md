@@ -1,0 +1,11 @@
+# Phase 08
+
+| Was | Now | Statement | Evidence |
+|---|---|---|---|
+| unknown | known | feeding a sequence model a test's full observed rerun history and asking it to predict `IsFlaky` (computed from that same history) is circular -- the model would just restate the label's own definition, not forecast anything | experiments/08-heuristic-control.md |
+| unknown | known | the reformulated task (prefix predicts suffix-flip) has real data support in only 2 of the 3 archived projects -- kevinsawicki-http-request has zero examples with a suffix flip at all, so its held-out fold has undefined AUC | artifacts/results/sequence.json |
+| unknown | known | on square-okhttp, the GRU beats the free control (count of past failures) by a bootstrap-confirmed 0.48 AUC margin (95% CI [0.355, 0.600], nowhere near zero); on tootallnate it is worse than the control on average but not distinguishably so on only 46 test examples (CI [-0.305, 0.177]) | artifacts/results/sequence.json |
+| unknown | known | raw and calibrated AUC are identical on both scored folds because Platt scaling is a monotonic remap of a fixed model's output and cannot change rank order -- unlike phase 07, where calibration changed AUC because the calibration wrapper retrained the base model on less data | experiments/08-heuristic-control.md |
+| unknown | known | against the pre-registered decision rule, the sequence model is withdrawn -- it does not reliably beat the control across the available folds, and the fold where it loses cannot be resolved as noise vs. a real disadvantage with the data on hand | decisions recorded in experiments/08-heuristic-control.md |
+| unknown | known-unknown | whether more training/test data (more projects with raw archives) would resolve the tootallnate fold's ambiguity, or would confirm the model is genuinely no better than the control there, is untested -- only 3 projects have raw archives at all |
+| unknown | known-unknown | the model's calibrated output collapsed to 4-7 distinct probability values per fold; whether a larger hidden size, more training examples, or a different architecture would fix this, or whether the task itself (few, mostly-binary input patterns) caps achievable output diversity regardless of model size, is untested |
